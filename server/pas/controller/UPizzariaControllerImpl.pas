@@ -15,11 +15,18 @@ type
   [MVCPath('/')]
   TPizzariaBackendController = class(TMVCController)
   public
+    [MVCPath('/')]
+    [MVCHTTPMethod([httpGET])]
 
     [MVCDoc('Criar novo pedido "201: Created"')]
     [MVCPath('/efetuarPedido')]
     [MVCHTTPMethod([httpPOST])]
     procedure efetuarPedido(const AContext: TWebContext);
+
+    [MVCDoc('Consultar ultimo pedido')]
+    [MVCPath('/consultarPedido/($doc)')]
+    [MVCHTTPMethod([httpGET])]
+    procedure consultarPedido();
   end;
 
 implementation
@@ -33,6 +40,19 @@ uses
 
 { TApp1MainController }
 
+procedure TPizzariaBackendController.consultarPedido();
+var
+  oPedido: TPedidoService;
+begin
+  oPedido := TPedidoService.Create;
+  try
+     Render(TJson.ObjectToJsonString(oPedido.consultarPedido(Context.Request.Params['doc'])));
+  finally
+    oPedido.Free;
+  end;
+  Log.Info('==>Executou o método ', 'consultarPedido');
+end;
+
 procedure TPizzariaBackendController.efetuarPedido(const AContext: TWebContext);
 var
   oEfetuarPedidoDTO: TEfetuarPedidoDTO;
@@ -45,7 +65,7 @@ begin
       oPedidoRetornoDTO := efetuarPedido(oEfetuarPedidoDTO.PizzaTamanho, oEfetuarPedidoDTO.PizzaSabor, oEfetuarPedidoDTO.DocumentoCliente);
       Render(TJson.ObjectToJsonString(oPedidoRetornoDTO));
     finally
-      oPedidoRetornoDTO.Free
+      Free
     end;
   finally
     oEfetuarPedidoDTO.Free;
